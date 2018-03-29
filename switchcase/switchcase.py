@@ -7,9 +7,17 @@ import logging
 import csv
 
 
-def save_work(server_target, ssl_check, auth_pair):
+def save_work(server_url, ssl_check, auth_pair):
+    server_target = '/'.join(
+        [
+            server_url,
+            "api",
+            "config",
+            "change",
+        ]
+    )
     requests.post(
-        server_target,
+        server_url,
         data={},
         verify=ssl_check,
         auth=auth_pair,
@@ -166,14 +174,15 @@ def main():
                     logger.info('Request: {0}'.format(http_package.request))
                     logger.info('Text: {0}'.format(http_package.text))
 
-                if save_check < save_interval and not args.nop:
+                if save_check < save_interval:
                     save_check += 1
                 elif args.nop or args.pop:
                     logger.info("No op or partial op. Not saving.")
                     print("No op or partial op. Not saving.")
                 else:
+                    print("Saving work.")
                     logger.info("Saving work.")
-                    save_work(server_target, ssl_check, auth_pair)
+                    save_work(args.url, ssl_check, auth_pair)
                     save_check = 0
 
     if args.nop or args.pop:
@@ -182,7 +191,7 @@ def main():
     else:
         print("Saving work.")
         logger.info("Saving work.")
-        save_work(server_target, ssl_check, auth_pair)
+        save_work(args.url, ssl_check, auth_pair)
 
     return 0
 
