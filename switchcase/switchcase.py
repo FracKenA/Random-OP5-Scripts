@@ -17,9 +17,6 @@ def save_work(server_url, ssl_check, auth_pair):
             "change",
         ]
     )
-    print("Server target: {0}".format(server_target))
-    print("SSL Check: {0}".format(ssl_check))
-    print("Auth Pair: {0}".format(auth_pair))
     http_post_save = requests.post(
         server_target,
         data=json.dumps({}),
@@ -27,28 +24,18 @@ def save_work(server_url, ssl_check, auth_pair):
         auth=auth_pair,
         headers={'content-type': 'application/json'}
     )
+    print("Saving work.")
+    print("Status Code: {0}".formt(http_post_save.status_code))
+    logger.info("Saving work.")
     logger.info('Header: {0}'.format(http_post_save.headers))
     logger.info('Request: {0}'.format(http_post_save.request))
+    logger.info('Text: {0} {1}'.format(
+        http_post_save.status_code,
+        http_post_save.text
+    ))
 
-    if http_post_save.status_code == 200 \
-       or http_post_save.status_code == 201:
-        print("Save status: {0}: {1}".format(
-            http_post_save.status_code,
-            http_post_save.text
-        ))
-        logger.info('Text: {0}: {1}'.format(
-            http_post_save.status_code,
-            http_post_save.text
-        ))
-    else:
-        print("Save status: {0}: {1}".format(
-            http_post_save.status_code,
-            http_post_save.text
-        ))
-        logger.info('Text: {0}: {1}'.format(
-            http_post_save.status_code,
-            http_post_save.text
-        ))
+    if http_post_save.status_code != 200 \
+       or http_post_save.status_code != 201:
         http_post_save.raise_for_status()
 
 
@@ -127,7 +114,14 @@ def main():
         type=int,
         default=20,
         dest="save_interval",
-        help="Sets the interval between saves."
+        help="Sets the interval be        server_target,
+        data=json.dumps({}),
+        verify=ssl_check,
+        auth=auth_pair,
+        headers={'content-type': 'application/json'}
+    )
+    logger.info('Header: {0}'.format(http_post_save.headers))
+tween saves."
     )
     args = parser.parse_args()
 
@@ -169,11 +163,11 @@ def main():
                 ))
                 continue
             elif line[0] != line[1]:
-                print("Adding line number {0}.\t{1}".format(
+                print("Switching line number {0}: {1}".format(
                     reader.line_num,
                     line
                 ))
-                logger.info("Adding line number {0}.\t{1}".format(
+                logger.info("Switching line number {0}: {1}".format(
                     reader.line_num,
                     line
                 ))
@@ -203,26 +197,24 @@ def main():
 
                     logger.info('Header: {0}'.format(http_package.headers))
                     logger.info('Request: {0}'.format(http_package.request))
+                    logger.info("Status code: {0}".format(
+                        http_package.status_code
+                    ))
                     logger.info('Text: {0}'.format(http_package.text))
 
                 if save_check < save_interval:
                     save_check += 1
                 elif args.nop or args.pop:
-                    logger.info("No op or partial op. Not saving.")
                     print("No op or partial op. Not saving.")
+                    logger.info("No op or partial op. Not saving.")
                 else:
-                    print("Saving work.")
-                    logger.info("Saving work.")
                     save_work(args.url, ssl_check, auth_pair)
                     save_check = 0
 
     if args.nop or args.pop:
         print("No op or partial op. Not saving")
         logger.info("No op or partial op. Not saving.")
-        print("No op or partial op. Not saving.")
     else:
-        print("Saving work.")
-        logger.info("Saving work.")
         save_work(args.url, ssl_check, auth_pair)
 
     return(0)
