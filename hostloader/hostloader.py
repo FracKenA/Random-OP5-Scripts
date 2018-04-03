@@ -170,6 +170,15 @@ def main():
             if 'str' in host:
                 break
 
+        logger.info("Saved")
+
+        r = requests.post(
+            config_change,
+            data=json.dumps({}),
+            verify=ssl_check,
+            auth=(user, password)
+        )
+
     return 0
 
 
