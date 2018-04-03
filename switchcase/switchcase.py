@@ -8,6 +8,7 @@ import csv
 
 
 def save_work(server_url, ssl_check, auth_pair):
+    logger = logging.getLogger(__name__)
     server_target = '/'.join(
         [
             server_url,
@@ -16,12 +17,39 @@ def save_work(server_url, ssl_check, auth_pair):
             "change",
         ]
     )
-    requests.post(
-        server_url,
-        data={},
+    print("Server target: {0}".format(server_target))
+    print("SSL Check: {0}".format(ssl_check))
+    print("Auth Pair: {0}".format(auth_pair))
+    http_post_save = requests.post(
+        server_target,
+        data=json.dumps({}),
         verify=ssl_check,
         auth=auth_pair,
+        headers={'content-type': 'application/json'}
     )
+    logger.info('Header: {0}'.format(http_post_save.headers))
+    logger.info('Request: {0}'.format(http_post_save.request))
+
+    if http_post_save.status_code == 200 \
+       or http_post_save.status_code == 201:
+        print("Save status: {0}: {1}".format(
+            http_post_save.status_code,
+            http_post_save.text
+        ))
+        logger.info('Text: {0}: {1}'.format(
+            http_post_save.status_code,
+            http_post_save.text
+        ))
+    else:
+        print("Save status: {0}: {1}".format(
+            http_post_save.status_code,
+            http_post_save.text
+        ))
+        logger.info('Text: {0}: {1}'.format(
+            http_post_save.status_code,
+            http_post_save.text
+        ))
+        http_post_save.raise_for_status()
 
 
 def main():
@@ -40,7 +68,7 @@ def main():
         level=logging.INFO,
         filename="switchcase.log"
     )
-    logger = logging.getLogger('switchcase')
+    logger = logging.getLogger(__name__)
 
     ssl_check = True
     description = "Switches the case of hosts in OP5 Monitor."
@@ -134,7 +162,6 @@ def main():
     with open(args.listfile, 'rU') as hostlist:
         reader = csv.reader(hostlist, delimiter=',')
         for line in reader:
-            print("Line: {0}".format(line))
             if len(line) != 2:
                 logger.info("Skipping line number {0}.\n{1}".format(
                     reader.line_num,
@@ -142,7 +169,11 @@ def main():
                 ))
                 continue
             elif line[0] != line[1]:
-                logger.info("Adding line number {0}.\n{1}".format(
+                print("Adding line number {0}.\t{1}".format(
+                    reader.line_num,
+                    line
+                ))
+                logger.info("Adding line number {0}.\t{1}".format(
                     reader.line_num,
                     line
                 ))
@@ -186,6 +217,7 @@ def main():
                     save_check = 0
 
     if args.nop or args.pop:
+        print("No op or partial op. Not saving")
         logger.info("No op or partial op. Not saving.")
         print("No op or partial op. Not saving.")
     else:
@@ -193,7 +225,7 @@ def main():
         logger.info("Saving work.")
         save_work(args.url, ssl_check, auth_pair)
 
-    return 0
+    return(0)
 
 
 if __name__ == '__main__':
