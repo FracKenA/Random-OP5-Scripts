@@ -25,7 +25,7 @@ def save_work(server_url, ssl_check, auth_pair):
         headers={'content-type': 'application/json'}
     )
     print("Saving work.")
-    print("Status Code: {0}".formt(http_post_save.status_code))
+    print("Status Code: {0}".format(http_post_save.status_code))
     logger.info("Saving work.")
     logger.info('Header: {0}'.format(http_post_save.headers))
     logger.info('Request: {0}'.format(http_post_save.request))
