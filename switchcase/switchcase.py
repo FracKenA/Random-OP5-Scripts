@@ -114,14 +114,7 @@ def main():
         type=int,
         default=20,
         dest="save_interval",
-        help="Sets the interval be        server_target,
-        data=json.dumps({}),
-        verify=ssl_check,
-        auth=auth_pair,
-        headers={'content-type': 'application/json'}
-    )
-    logger.info('Header: {0}'.format(http_post_save.headers))
-tween saves."
+        help="Sets the interval between saves.",
     )
     args = parser.parse_args()
 
