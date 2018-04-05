@@ -7,13 +7,36 @@ import logging
 import csv
 
 
-def save_work(server_target, ssl_check, auth_pair):
-    requests.post(
+def save_work(server_url, ssl_check, auth_pair):
+    logger = logging.getLogger(__name__)
+    server_target = '/'.join(
+        [
+            server_url,
+            "api",
+            "config",
+            "change",
+        ]
+    )
+    http_post_save = requests.post(
         server_target,
-        data={},
+        data=json.dumps({}),
         verify=ssl_check,
         auth=auth_pair,
+        headers={'content-type': 'application/json'}
     )
+    print("Saving work.")
+    print("Status Code: {0}".format(http_post_save.status_code))
+    logger.info("Saving work.")
+    logger.info('Header: {0}'.format(http_post_save.headers))
+    logger.info('Request: {0}'.format(http_post_save.request))
+    logger.info('Text: {0} {1}'.format(
+        http_post_save.status_code,
+        http_post_save.text
+    ))
+
+    if http_post_save.status_code != 200 \
+       or http_post_save.status_code != 201:
+        http_post_save.raise_for_status()
 
 
 def main():
@@ -32,7 +55,7 @@ def main():
         level=logging.INFO,
         filename="switchcase.log"
     )
-    logger = logging.getLogger('switchcase')
+    logger = logging.getLogger(__name__)
 
     ssl_check = True
     description = "Switches the case of hosts in OP5 Monitor."
@@ -91,7 +114,7 @@ def main():
         type=int,
         default=20,
         dest="save_interval",
-        help="Sets the interval between saves."
+        help="Sets the interval between saves.",
     )
     args = parser.parse_args()
 
@@ -126,7 +149,6 @@ def main():
     with open(args.listfile, 'rU') as hostlist:
         reader = csv.reader(hostlist, delimiter=',')
         for line in reader:
-            print("Line: {0}".format(line))
             if len(line) != 2:
                 logger.info("Skipping line number {0}.\n{1}".format(
                     reader.line_num,
@@ -134,7 +156,11 @@ def main():
                 ))
                 continue
             elif line[0] != line[1]:
-                logger.info("Adding line number {0}.\n{1}".format(
+                print("Switching line number {0}: {1}".format(
+                    reader.line_num,
+                    line
+                ))
+                logger.info("Switching line number {0}: {1}".format(
                     reader.line_num,
                     line
                 ))
@@ -164,27 +190,27 @@ def main():
 
                     logger.info('Header: {0}'.format(http_package.headers))
                     logger.info('Request: {0}'.format(http_package.request))
+                    logger.info("Status code: {0}".format(
+                        http_package.status_code
+                    ))
                     logger.info('Text: {0}'.format(http_package.text))
 
-                if save_check < save_interval and not args.nop:
+                if save_check < save_interval:
                     save_check += 1
                 elif args.nop or args.pop:
-                    logger.info("No op or partial op. Not saving.")
                     print("No op or partial op. Not saving.")
+                    logger.info("No op or partial op. Not saving.")
                 else:
-                    logger.info("Saving work.")
-                    save_work(server_target, ssl_check, auth_pair)
+                    save_work(args.url, ssl_check, auth_pair)
                     save_check = 0
 
     if args.nop or args.pop:
+        print("No op or partial op. Not saving")
         logger.info("No op or partial op. Not saving.")
-        print("No op or partial op. Not saving.")
     else:
-        print("Saving work.")
-        logger.info("Saving work.")
-        save_work(server_target, ssl_check, auth_pair)
+        save_work(args.url, ssl_check, auth_pair)
 
-    return 0
+    return(0)
 
 
 if __name__ == '__main__':
