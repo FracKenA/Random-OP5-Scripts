@@ -88,7 +88,7 @@ def main():
     )
     args = parser.parse_args()
 
-    logger.info("Passed Arguments: {}".format(args))
+    logger.info("Passed Arguments: {0}".format(args))
 
     if args.nossl:
         print("Surpressing SSL warnings...")
@@ -125,7 +125,7 @@ def main():
     with open(args.jsontemplate, 'r') as json_file:
         json_template = json.load(json_file)
 
-    logger.info("JSON Template: {}".format(json_template))
+    logger.info("JSON Template: {0}".format(json_template))
 
     with open(args.hostsfile, 'r') as importfile:
         for host in importfile:
@@ -136,7 +136,7 @@ def main():
             elif case_upper:
                 host = host.upper()
 
-            logger.info("Adding host {}".format(host))
+            logger.info("Adding host {0}".format(host))
 
             json_payload = json_builder(json_template, host)
 
@@ -149,9 +149,9 @@ def main():
                 headers={'content-type': 'application/json'}
             )
 
-            logger.info('Header: {}'.format(r.headers))
-            logger.info('Request: {}'.format(r.request))
-            logger.info('Text: {}'.format(r.text))
+            logger.info('Header: {0}'.format(r.headers))
+            logger.info('Request: {0}'.format(r.request))
+            logger.info('Text: {0}'.format(r.text))
 
             if save_check < save_check_max:
                 save_check += 1
@@ -169,6 +169,15 @@ def main():
 
             if 'str' in host:
                 break
+
+        logger.info("Saved")
+
+        r = requests.post(
+            config_change,
+            data=json.dumps({}),
+            verify=ssl_check,
+            auth=(user, password)
+        )
 
     return 0
 
