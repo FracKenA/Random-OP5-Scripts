@@ -15,13 +15,14 @@ def get_hosts(server_url, auth_pair, ssl_check=True):
     server_target = '/'.join(
         [
             server_url,
-            "host"
+            "host?format=json"
         ]
     )
     http_get_host = requests.get(
         server_target,
         verify=ssl_check,
-        auth=auth_pair
+        auth=auth_pair,
+        params={'format': 'json'}
     )
 
     logger.info('Header: {0}'.format(http_get_host.headers))
@@ -31,7 +32,7 @@ def get_hosts(server_url, auth_pair, ssl_check=True):
     ))
 
     if http_get_host.status_code != 200 \
-       or http_get_host.status_code != 201:
+       and http_get_host.status_code != 201:
         print("Status code: {0}".format(http_get_host.status_code))
 
     return json.loads(http_get_host.text)
@@ -64,7 +65,7 @@ def update_host(server_endpoint, data_payload, auth_pair, ssl_check=True):
     # TODO: Return (status_code, http.text) tuple to move error handling into
     #    main().
     if http_patch.status_code != 200 \
-       or http_patch.status_code != 201:
+       and http_patch.status_code != 201:
         error_text = ast.literal_eval(http_patch.text)
         host = data_payload["host_name"]
         print("Status code: {0}\tError: {1}".format(
@@ -88,7 +89,8 @@ def save_work(server_url, ssl_check, auth_pair):
         data=json.dumps({}),
         verify=ssl_check,
         auth=auth_pair,
-        headers={'content-type': 'application/json'}
+        headers={'content-type': 'application/json'},
+        params={'format': 'json'}
     )
     print("Saving work.")
     logger.info("Saving work.")
@@ -100,7 +102,7 @@ def save_work(server_url, ssl_check, auth_pair):
     ))
 
     if http_post_save.status_code != 200 \
-       or http_post_save.status_code != 201:
+       and http_post_save.status_code != 201:
         error_text = ast.literal_eval(http_post_save.text)
         print("Status code: {0}\tError: {1}".format(
             http_post_save.status_code,
