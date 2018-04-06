@@ -5,6 +5,7 @@ import requests
 import json
 import logging
 import re
+import ast
 
 
 def get_hosts(server_url, auth_pair, ssl_check=True):
@@ -28,6 +29,10 @@ def get_hosts(server_url, auth_pair, ssl_check=True):
     logger.info("Status code: {0}".format(
         http_get_host.status_code
     ))
+
+    if http_get_host.status_code != 200 \
+       or http_get_host.status_code != 201:
+        print("Status code: {0}".format(http_get_host.status_code))
 
     return json.loads(http_get_host.text)
 
@@ -56,6 +61,17 @@ def update_host(server_endpoint, data_payload, auth_pair, ssl_check=True):
     ))
     logger.info('Text: {0}'.format(http_patch.text))
 
+    # TODO: Return (status_code, http.text) tuple to move error handling into
+    #    main().
+    if http_patch.status_code != 200 \
+       or http_patch.status_code != 201:
+        error_text = ast.literal_eval(http_patch.text)
+        host = data_payload["host_name"]
+        print("Status code: {0}\tError: {1}".format(
+            http_patch.status_code,
+            error_text["full_error"][host]["host_name"]
+        ))
+
 
 def save_work(server_url, ssl_check, auth_pair):
     logger = logging.getLogger(__name__)
@@ -75,18 +91,21 @@ def save_work(server_url, ssl_check, auth_pair):
         headers={'content-type': 'application/json'}
     )
     print("Saving work.")
-    print("Status Code: {0}".format(http_post_save.status_code))
     logger.info("Saving work.")
     logger.info('Header: {0}'.format(http_post_save.headers))
     logger.info('Request: {0}'.format(http_post_save.request))
-    logger.info('Text: {0} {1}'.format(
+    logger.info('Status code: {0}\tText: {1}'.format(
         http_post_save.status_code,
         http_post_save.text
     ))
 
     if http_post_save.status_code != 200 \
        or http_post_save.status_code != 201:
-        http_post_save.raise_for_status()
+        error_text = ast.literal_eval(http_post_save.text)
+        print("Status code: {0}\tError: {1}".format(
+            http_post_save.status_code,
+            error_text["full_error"]["type"]
+        ))
 
 
 def main():
@@ -221,31 +240,26 @@ def main():
         data_payload = {"host_name": unicode.encode(hostname_new)}
         logger.info("Data Payload: {0}".format(data_payload))
         logger.info("Server target: {0}".format(server["resource"]))
-        print("Data Payload: {0}".format(data_payload))
-        print("Server target: {0}".format(server["resource"]))
 
         if not args.nop:
             update_host(server["resource"], data_payload, auth_pair, ssl_check)
 
-    return 0
+        if save_check < save_interval:
+            save_check += 1
+        elif args.nop or args.pop:
+            print("No op or partial op. Not saving.")
+            logger.info("No op or partial op. Not saving.")
+        else:
+            save_work(args.url, ssl_check, auth_pair)
+            save_check = 0
 
-#
-#                if save_check < save_interval:
-#                    save_check += 1
-#                elif args.nop or args.pop:
-#                    print("No op or partial op. Not saving.")
-#                    logger.info("No op or partial op. Not saving.")
-#                else:
-#                    save_work(args.url, ssl_check, auth_pair)
-#                    save_check = 0
-#
-#    if args.nop or args.pop:
-#        print("No op or partial op. Not saving")
-#        logger.info("No op or partial op. Not saving.")
-#    else:
-#        save_work(args.url, ssl_check, auth_pair)
-#
-#    return(0)
+    if args.nop or args.pop:
+        print("No op or partial op. Not saving.")
+        logger.info("No op or partial op. Not saving.")
+    else:
+        save_work(args.url, ssl_check, auth_pair)
+
+    return 0
 
 
 if __name__ == '__main__':
