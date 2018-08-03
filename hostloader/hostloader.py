@@ -47,7 +47,6 @@ def main():
 
     ssl_check = True
     save_check = 0
-    save_check_max = 20
     description = "Loads hosts into OP5 Monitor"
 
     parser = argparse.ArgumentParser(description=description)
@@ -86,6 +85,11 @@ def main():
         action="store_true",
         help="Set hostname to lowercase"
     )
+    parser.add_argument(
+        "--saveinterval",
+        action="store_true",
+        help="Set the number of hosts between saves"
+    )
     args = parser.parse_args()
 
     logger.info("Passed Arguments: {0}".format(args))
@@ -100,6 +104,7 @@ def main():
     password = args.password
     case_upper = args.upper
     case_lower = args.lower
+    save_check_max = args.saveinterval
 
     config_host = '/'.join(
         [
