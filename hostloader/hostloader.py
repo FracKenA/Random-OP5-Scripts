@@ -87,7 +87,6 @@ def main():
     )
     parser.add_argument(
         "--saveinterval",
-        action="store_true",
         help="Set the number of hosts between saves"
     )
     args = parser.parse_args()
